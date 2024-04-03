@@ -8,48 +8,31 @@ const weatherData = require('./weather.json');
 
 dotenv.config();
 
-class Forecast {
-  constructor(date, description) {
-    this.date = date;
-    this.description = description;
-  }
-}
-
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
-const cities = [
-  {name: 'Seattle', lat: '47.6062', lon: '-122.3321'},
-  {name: 'Paris', lat: '48.8566', lon: '2.3522'},
-  {name: 'Amman', lat: '31.9454', lon: '35.9284'}
-];
 
+class Forecast {
+  constructor(datetime, description) {
+    console.log("this is datetime", datetime)
+    this.date = datetime;
+    this.description = description;
+  }
+}
 
   app.get('/weather', async (req, res) => {
     try {
       const {lat, lon, searchQuery} = req.query;
       console.log(lat, lon, searchQuery)
-      const city = cities.find(city => city.lat === lat || city.lon === lon || city.name.toLowerCase() === searchQuery.toLowerCase());
-      
+      const foundCity = weatherData.find(cityObj => cityObj.lat === lat || cityObj.lon === lon || cityObj.city_name === searchQuery);
+      console.log("found city", foundCity)
 
-      if (!city) {
-        return res.status(404).json({message: 'City not found' });
-      }
-
-      // const weatherResponse = await axios.get(`https://us1.locationiq.com/v1/search?key=${process.env.VITE_LOCATION_ACCESS_TOKEN}&q=${searchQuery}&format=json`);
-      
-      const cityWeatherData = weatherData.data[searchQuery.toLowerCase()];
-
-      if (!cityWeatherData) {
-        return res.status(404).json({ message: 'Weather data not available for the city'});
-      }
-
-      const forecasts = cityWeatherData.map(weather => new Forecast(weather.date, weather.description));
-
-      res.json(forecasts);
+      const forecasts = foundCity.data.map(weatherObj => new Forecast(weatherObj.datetime, weatherObj.weather.description));
+console.log("this is forecast", forecasts)
+      res.status(200).send(forecasts);
     } catch (error) {
       console.error('Error fetching weather data:', error);
       res.status(500).json({ message: 'Internal Server Error'});
