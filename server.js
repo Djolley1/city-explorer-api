@@ -16,23 +16,28 @@ app.use(express.json());
 
 
 class Forecast {
-  constructor(datetime, description) {
-    console.log("this is datetime", datetime)
-    this.date = datetime;
-    this.description = description;
+  constructor(dayObj) {
+    this.date = dayObj.datetime;
+    this.description = dayObj.weather.description;
+    this.minTemp = dayObj.min_temp;
+    this.maxTemp = dayObj.max_temp;
   }
 }
 
   app.get('/weather', async (req, res) => {
     try {
-      const {lat, lon, searchQuery} = req.query;
-      console.log(lat, lon, searchQuery)
-      const foundCity = weatherData.find(cityObj => cityObj.lat === lat || cityObj.lon === lon || cityObj.city_name === searchQuery);
-      console.log("found city", foundCity)
+      const {lat, lon} = req.query;
 
-      const forecasts = foundCity.data.map(weatherObj => new Forecast(weatherObj.datetime, weatherObj.weather.description));
-console.log("this is forecast", forecasts)
-      res.status(200).send(forecasts);
+      const apiKey = process.env.WEATHER_API_KEY; // Ensure you have an API key for the weather API
+      const weatherResponse = await axios.get(`https://api.weatherbit.io/v2.0/forecast/daily?key=${apiKey}&lat=${lat}&lon=${lon}&days=5&units=I`);
+      
+      const weatherData = weatherResponse.data.data;
+      
+
+    const forecasts = weatherData.map(day => new Forecast(day));
+
+
+  res.status(200).json(forecasts);
     } catch (error) {
       console.error('Error fetching weather data:', error);
       res.status(500).json({ message: 'Internal Server Error'});
