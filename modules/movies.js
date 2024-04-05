@@ -4,9 +4,11 @@ const axios = require('axios');
 
 class Movie {
     constructor(movieObj) {
+        console.log(movieObj);
       this.title = movieObj.title;
       this.releaseDate = movieObj.release_date;
       this.overview = movieObj.overview;
+      this.posterPath = movieObj.poster_path;
     }
   };
 
